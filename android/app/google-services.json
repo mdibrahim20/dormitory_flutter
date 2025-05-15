@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "74429250354",
+    "project_id": "dormitoryapp-86889",
+    "storage_bucket": "dormitoryapp-86889.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:74429250354:android:d386fff7dab8f4fd1b352b",
+        "android_client_info": {
+          "package_name": "com.example.dorm_booking_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "74429250354-b0u4ffeiss627ak1f3fsv2iuk52996ut.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dorm_booking_app",
+            "certificate_hash": "23e306e3af4015a3c2e68749d54e65cd5713fb56"
+          }
+        },
+        {
+          "client_id": "74429250354-5p515qpvgtrscjnbi1rlihj9aiprje4k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfBHhadOD704PAtCpMSOLybgGAbrx2Kw4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "74429250354-5p515qpvgtrscjnbi1rlihj9aiprje4k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
