@@ -304,14 +304,14 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   children: [
                     Text("Booking Summary", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])),
                     const SizedBox(height: 16),
-                    _priceRow("Price per night", "\$${data['price']}"),
+                    _priceRow("Price per night", "\৳${data['price']}"),
                     _priceRow("Nights", _numberOfNights.toString()),
                     const Divider(height: 24, thickness: 1),
                     _priceRow(
                       "Total",
                       _discount > 0
-                          ? "\$${_finalPrice.toStringAsFixed(2)} (after $_discount% off)"
-                          : "\$$_totalPrice",
+                          ? "\৳${_finalPrice.toStringAsFixed(2)} (after $_discount% off)"
+                          : "\৳$_totalPrice",
                       isBold: true,
                     ),
 

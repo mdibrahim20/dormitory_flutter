@@ -63,7 +63,7 @@ class PaymentScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text("Total Amount: \$${finalPrice.toStringAsFixed(2)}", style: const TextStyle(fontSize: 24)),
+            Text("Total Amount: \৳${finalPrice.toStringAsFixed(2)}", style: const TextStyle(fontSize: 24)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {

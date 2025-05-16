@@ -7,14 +7,24 @@ import 'package:flutter/material.dart';
 import '../Widget/app_bottom_nav_bar.dart'; // Your custom bottom nav
 
 class ProfileScreen extends StatelessWidget {
-  final int _selectedIndex = 4;
+  final int _selectedIndex = 3;
 
   void _onItemTapped(BuildContext context, int index) {
-    if (index != _selectedIndex) {
-      // Navigate to different screens accordingly
-      // Example: Navigator.pushReplacementNamed(context, '/explore');
+    if (index == 0) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else if (index == 1) {
+      Navigator.pushReplacementNamed(context, '/wishlist');
+    } else if (index == 2) {
+      Navigator.pushReplacementNamed(context, '/bookings');
+    }
+    // else if (index == 3) {
+    //   Navigator.pushReplacementNamed(context, '/messages');
+    // }
+    else if (index == 3) {
+      // Already on Profile — no action
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

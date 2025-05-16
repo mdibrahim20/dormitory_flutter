@@ -22,10 +22,10 @@ class AppBottomNavigationBar extends StatelessWidget {
       selectedItemColor: Colors.red,
       unselectedItemColor: Colors.grey,
       items: [
-        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Explore'),
+        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Wishlists'),
-        BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: 'Trips'),
-        BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
+        BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: 'Bookings'),
+        // BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
           label: user != null ? 'Profile' : 'Log in',

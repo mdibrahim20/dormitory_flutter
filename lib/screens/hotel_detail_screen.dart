@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'reservation_screen.dart';
+
 class HotelDetailScreen extends StatefulWidget {
   final DocumentSnapshot data;
 
@@ -14,14 +17,18 @@ class HotelDetailScreen extends StatefulWidget {
 }
 
 class _HotelDetailScreenState extends State<HotelDetailScreen> {
+  bool hasPayment = false;
+  Map<String, String> categoryNames = {};
+  Map<String, String> branchNames = {};
+  Map<String, String> apartmentNames = {};
+  String? selectedRoomNumber;
+
   @override
   void initState() {
     super.initState();
     checkPaymentStatus();
+    fetchAdditionalDetails();
   }
-
-  bool hasPayment = false;
-
 
   Future<void> checkPaymentStatus() async {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? "guest_user";
@@ -38,27 +45,53 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
     });
   }
 
+  Future<void> fetchAdditionalDetails() async {
+    final dormData = widget.data.data() as Map<String, dynamic>;
+
+    final catSnap = await FirebaseFirestore.instance
+        .collection('categories')
+        .doc(dormData['category_id'])
+        .get();
+    final branchSnap = await FirebaseFirestore.instance
+        .collection('branches')
+        .doc(dormData['branch_id'])
+        .get();
+    final aptSnap = await FirebaseFirestore.instance
+        .collection('apartments')
+        .doc(dormData['apartment_id'])
+        .get();
+
+    setState(() {
+      categoryNames[dormData['category_id']] = catSnap.data()?['name'] ?? 'N/A';
+      branchNames[dormData['branch_id']] = branchSnap.data()?['name'] ?? 'N/A';
+      apartmentNames[dormData['apartment_id']] = aptSnap.data()?['apartment_name'] ?? 'N/A';
+    });
+  }
+
+  LatLng extractLatLng(String url) {
+    final uri = Uri.parse(url);
+    final query = uri.queryParameters['q'];
+    if (query != null) {
+      final parts = query.split(',');
+      if (parts.length == 2) {
+        return LatLng(double.parse(parts[0]), double.parse(parts[1]));
+      }
+    }
+    return LatLng(23.8103, 90.4125);
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = widget.data;
-
-    LatLng extractLatLng(String url) {
-      final uri = Uri.parse(url);
-      final query = uri.queryParameters['q'];
-      if (query != null) {
-        final parts = query.split(',');
-        if (parts.length == 2) {
-          return LatLng(double.parse(parts[0]), double.parse(parts[1]));
-        }
-      }
-      // fallback if parsing fails
-      return LatLng(23.8103, 90.4125);
-    }
-
+    final dormData = data.data() as Map<String, dynamic>;
+    final List<dynamic> images = [dormData['image_url'], ...?dormData['additional_images']];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(data['name']),
+        title: Text(
+          dormData['name'],
+          style: GoogleFonts.poppins(color: Colors.black),
+        ),
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -68,115 +101,65 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 250,
-              child: PageView.builder(
-                itemCount: 5,
-                itemBuilder: (context, index) {
-                  return Image.network(
-                    data['image_url'],
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                  );
-                },
-              ),
+            CarouselSlider(
+              options: CarouselOptions(height: 250, autoPlay: true),
+              items: images.map((i) => Image.network(i, fit: BoxFit.cover, width: double.infinity)).toList(),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(data['name'], style: const TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.bold)),
-                  Text('Room in ${data['location']}',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                  Text(dormData['name'], style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('2 queen beds · Shared bathroom'),
+                  Text('Room in ${dormData['location']}', style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[700])),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.black, size: 18),
-                      const SizedBox(width: 4),
-                      Text('${data['rating']} · 478 reviews'),
-                    ],
-                  ),
+                  Text('Category: ${categoryNames[dormData['category_id']] ?? '...'}'),
+                  Text('Branch: ${branchNames[dormData['branch_id']] ?? '...'}'),
+                  Text('Apartment: ${apartmentNames[dormData['apartment_id']] ?? '...'}'),
+                  Text('Room Number: ${dormData['room_number']}'),
                   const Divider(height: 32),
-                  Row(
-                    children: [
-                      const CircleAvatar(backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc/300'), radius: 30),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Hosted by ${data['host_name']}",
-                              style: const TextStyle(fontWeight: FontWeight
-                                  .bold)),
-                          Text("Superhost · ${data['host_duration']}"),
-                        ],
+
+                  _sectionTitle(Icons.info_outline, "About this place"),
+                  Text(dormData['about'] ?? "No description available"),
+
+                  if (dormData['sleep_info'] != null && dormData['sleep_info'] is List) ...[
+                    const SizedBox(height: 24),
+                    _sectionTitle(Icons.bed, "Where you’ll sleep"),
+                    SizedBox(
+                      height: 120,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: (dormData['sleep_info'] as List).length,
+                        itemBuilder: (context, index) {
+                          final item = (dormData['sleep_info'] as List)[index];
+                          return _sleepCard(item);
+                        },
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  const Text("About this place", style: TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18)),
-                  const SizedBox(height: 8),
-                  Text(data['about'] ?? "No description available"),
-                  const SizedBox(height: 24),
-                  const SizedBox(height: 8),
-                  if (data['sleep_info'] != null && data['sleep_info'] is List)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("Where you’ll sleep", style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18)),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          height: 120,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: (data['sleep_info'] as List).length,
-                            itemBuilder: (context, index) {
-                              final item = (data['sleep_info'] as List)[index];
-                              return _sleepCard(item);
-                            },
-                          ),
-                        ),
-                      ],
                     ),
+                  ],
+
+                  if (dormData['amenities'] != null && dormData['amenities'] is List) ...[
+                    const SizedBox(height: 24),
+                    _sectionTitle(Icons.room_service, "What this place offers"),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List<Widget>.from(
+                        (dormData['amenities'] as List).map(
+                              (item) => Chip(label: Text(item.toString())),
+                        ),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 24),
-                  const SizedBox(height: 8),
-                  if (data['amenities'] != null && data['amenities'] is List)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("What this place offers", style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18)),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: List<Widget>.from(
-                            (data['amenities'] as List).map(
-                                  (item) => Chip(label: Text(item.toString())),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                  const SizedBox(height: 24),
-                  const Text("Where you’ll be", style: TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18)),
-                  const SizedBox(height: 8),
-                  if (data['location_map_url'] != null &&
-                      data['location_map_url'].toString().isNotEmpty)
+                  if (dormData['location_map_url'] != null && dormData['location_map_url'].toString().isNotEmpty)
                     SizedBox(
                       height: 200,
                       child: FlutterMap(
                         options: MapOptions(
-                          center: extractLatLng(data['location_map_url']),
+                          center: extractLatLng(dormData['location_map_url']),
                           zoom: 15,
                         ),
                         children: [
@@ -190,17 +173,13 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
                               Marker(
                                 width: 80,
                                 height: 80,
-                                point: extractLatLng(data['location_map_url']),
-                                child: Icon(
-                                  Icons.location_pin,
-                                  size: 40,
-                                  color: Colors.red,
-                                ),
+                                point: extractLatLng(dormData['location_map_url']),
+                                child: const Icon(Icons.location_pin, size: 40, color: Colors.red),
                               )
                             ],
                           ),
                         ],
-                      )
+                      ),
                     )
                   else
                     Container(
@@ -210,46 +189,28 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
                       child: const Text("Map Not Available"),
                     ),
 
-                  const SizedBox(height: 24),
-                  if (data['house_rules'] != null &&
-                      data['house_rules'] is List)
+                  if (dormData['house_rules'] != null && dormData['house_rules'] is List) ...[
+                    const SizedBox(height: 24),
+                    _sectionTitle(Icons.rule, "House Rules"),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("House Rules", style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18)),
-                        const SizedBox(height: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: List<Widget>.from(
-                            (data['house_rules'] as List).map(
-                                  (rule) => Text('- $rule'),
-                            ),
-                          ),
-                        ),
-                      ],
+                      children: List<Widget>.from(
+                        (dormData['house_rules'] as List).map((rule) => Text('- $rule')),
+                      ),
                     ),
+                  ],
 
-                  const SizedBox(height: 24),
-                  if (data['safety'] != null && data['safety'] is List)
+                  if (dormData['safety'] != null && dormData['safety'] is List) ...[
+                    const SizedBox(height: 24),
+                    _sectionTitle(Icons.security, "Safety & Property"),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("Safety & Property", style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18)),
-                        const SizedBox(height: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: List<Widget>.from(
-                            (data['safety'] as List).map(
-                                  (safety) => Text('- $safety'),
-                            ),
-                          ),
-                        ),
-                      ],
+                      children: List<Widget>.from(
+                        (dormData['safety'] as List).map((safety) => Text('- $safety')),
+                      ),
                     ),
+                  ],
                   const SizedBox(height: 100),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -270,55 +231,28 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "\$${data['price']}",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  "\৳${dormData['price']}",
+                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                const Text(
-                  "per night.",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                ),
+                Text("per night.", style: GoogleFonts.poppins(fontSize: 14, color: Colors.black)),
               ],
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: () => _checkIfAlreadyBookedAndNavigate(context),
-              child: const Text("Reserve"),
+              child: Text("Reserve", style: GoogleFonts.poppins(fontSize: 16)),
             ),
-
           ],
         ),
       ),
-
-
     );
   }
 
   static Widget _sleepCard(dynamic item) {
-    String keyText = "";
-    String valueText = "";
-
-    if (item is String && item.contains("{") && item.contains("}")) {
-      // Clean and split: "{bed: 1 queen bed}" → "bed: 1 queen bed"
-      final cleaned = item.replaceAll("{", "").replaceAll("}", "");
-      final parts = cleaned.split(":");
-      if (parts.length >= 2) {
-        keyText = parts[0].trim();
-        valueText = parts.sublist(1).join(":").trim();  // just in case value has ":"
-      } else {
-        valueText = item;
-      }
-    } else if (item is Map && item.isNotEmpty) {
-      keyText = item.keys.first.toString();
-      valueText = item.values.first.toString();
-    } else {
-      valueText = item.toString();
-    }
-
     return Container(
       width: 120,
       margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -332,75 +266,49 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
         children: [
           const Icon(Icons.bed, size: 28),
           const SizedBox(height: 8),
-          Text(
-            keyText.isNotEmpty ? '$keyText: $valueText' : valueText,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12),
-          ),
+          Text(item.toString(), textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
         ],
       ),
     );
   }
 
+  static Widget _sectionTitle(IconData icon, String title) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.black54),
+        const SizedBox(width: 8),
+        Text(title, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
   void _checkIfAlreadyBookedAndNavigate(BuildContext context) async {
-  print('✅ Reserve button pressed');
-  final userId = FirebaseAuth.instance.currentUser?.uid;
-  print('✅ currentUser: $userId');
+    final userId = FirebaseAuth.instance.currentUser?.uid;
 
-  if (userId == null) {
-  ScaffoldMessenger.of(context).showSnackBar(
-  const SnackBar(content: Text('Please login first.')),
-  );
-  return;
-  }
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please login first.')));
+      return;
+    }
 
-  final today = DateTime.now();
-  try {
-  print("👉 Querying bookings...");
-  final query = await FirebaseFirestore.instance
-      .collection('bookings')
-      .where('user_id', isEqualTo: userId)
-      .where('dormitory_id', isEqualTo: widget.data.id)
-      .where('end_date', isGreaterThanOrEqualTo: Timestamp.fromDate(today))
-      .get();
+    final today = DateTime.now();
+    final query = await FirebaseFirestore.instance
+        .collection('bookings')
+        .where('user_id', isEqualTo: userId)
+        .where('dormitory_id', isEqualTo: widget.data.id)
+        .where('end_date', isGreaterThanOrEqualTo: Timestamp.fromDate(today))
+        .get();
 
-  print('✅ existingBookings count: ${query.docs.length}');
+    if (query.docs.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You already have an active booking.')),
+      );
+      return;
+    }
 
-  if (query.docs.isNotEmpty) {
-  ScaffoldMessenger.of(context).showSnackBar(
-  const SnackBar(content: Text('You already have an active booking.')),
-  );
-  return;
-  }
-
-  print('✅ No active bookings → Navigating to ReservationScreen');
-  Navigator.push(
-  context,
-  MaterialPageRoute(
-  builder: (context) => ReservationScreen(data: widget.data),
-  ),
-  );
-  } catch (e) {
-  print('❌ Error in booking check: $e');
-  ScaffoldMessenger.of(context).showSnackBar(
-  const SnackBar(content: Text('An error occurred. Please try again.')),
-  );
-  }
-  }
-
-
-
-
-
-  static Widget _iconText(IconData icon, String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 8),
-          Text(label),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReservationScreen(data: widget.data),
       ),
     );
   }

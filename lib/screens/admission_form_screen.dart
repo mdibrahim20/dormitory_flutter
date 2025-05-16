@@ -195,7 +195,7 @@ I, the undersigned, have read and understood all the rules of Younic Home and ag
                     Text("Check-out: ${widget.endDate.toLocal().toString().split(' ')[0]}"),
                     Text("Coupon: ${widget.couponCode.isNotEmpty ? widget.couponCode : 'None'}"),
                     Text("Discount: ${widget.discount}%"),
-                    Text("Price after Discount: \$${widget.finalPrice.toStringAsFixed(2)}"),
+                    Text("Price after Discount: \৳${widget.finalPrice.toStringAsFixed(2)}"),
                   ],
                 ),
               ),

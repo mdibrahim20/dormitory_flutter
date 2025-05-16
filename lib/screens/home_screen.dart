@@ -34,12 +34,12 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.pushReplacementNamed(context, '/wishlist');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/trips');
+        Navigator.pushReplacementNamed(context, '/bookings');
         break;
+      // case 3:
+      //   Navigator.pushReplacementNamed(context, '/messages');
+      //   break;
       case 3:
-        Navigator.pushReplacementNamed(context, '/messages');
-        break;
-      case 4:
         if (user != null) {
           Navigator.pushReplacementNamed(context, '/profile');
         } else {
@@ -488,7 +488,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "\$${data['price_for_days']} total",
+                        "\৳${data['price_for_days']} total",
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w600),
                       ),

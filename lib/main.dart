@@ -18,6 +18,7 @@ import 'screens/Admin/admin_banners_screen.dart';          // ✅ (create later)
 import 'screens/Admin/admin_announcements_screen.dart';          // ✅ (create later)
 import 'screens/Admin/admin_category_manage_screen.dart';          // ✅ (create later)
 import 'screens/Admin/admin_apartment_screen.dart';          // ✅ (create later)
+import 'screens/booking_screen.dart';          // ✅ (create later)
 
 import 'dev/seeder.dart';
 import 'dev/seed_bookings.dart';
@@ -53,6 +54,7 @@ class MyApp extends StatelessWidget {
         '/home': (_) => HomeScreen(),
         '/wishlist': (_) => WishlistScreen(),
         '/profile': (_) => ProfileScreen(),
+        '/bookings': (_) => MyBookingsScreen(),
         // --- auth wrapper
         '/auth': (_) => AuthWrapper(),
         // --- admin routes ✅

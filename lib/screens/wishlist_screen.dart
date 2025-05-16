@@ -43,7 +43,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               Text('${data['name']}', style: TextStyle(color: Colors.grey[700])),
               Text('Saved for May 8 - 13', style: TextStyle(color: Colors.grey)),
-              Text('\$${data['price_for_days']} for 5 nights',
+              Text('\৳${data['price_for_days']} for 5 nights',
                   style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 10),
               TextField(
@@ -97,12 +97,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
           Navigator.pushReplacementNamed(context, '/wishlist');
           break;
         case 2:
-          Navigator.pushReplacementNamed(context, '/trips');
+          Navigator.pushReplacementNamed(context, '/bookings');
           break;
+        // case 3:
+        //   Navigator.pushReplacementNamed(context, '/messages');
+        //   break;
         case 3:
-          Navigator.pushReplacementNamed(context, '/messages');
-          break;
-        case 4:
           if (user != null) {
             Navigator.pushReplacementNamed(context, '/profile');
           } else {
@@ -169,7 +169,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           Text('${data['name']}', style: TextStyle(color: Colors.grey[700])),
                           Text('Saved for May 8 - 13', style: TextStyle(color: Colors.grey)),
-                          Text('\$${data['price_for_days']} for 5 nights',
+                          Text('\৳${data['price_for_days']} for 5 nights',
                               style: TextStyle(fontWeight: FontWeight.bold)),
                           SizedBox(height: 10),
                           Align(
